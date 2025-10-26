@@ -1,0 +1,15 @@
+#!/bin/sh
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[ -z "$REPO_ROOT" ] && exit 0
+echo "[pre-push-llm] Escaneando con LLM..."
+python3 "$REPO_ROOT/secretscan_llm.py" scan "$REPO_ROOT" --rules "only_new=true,min=low"
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo ""
+  echo "❌ Push bloqueado: secretos tras validación LLM."
+  echo "Ejecuta localmente para ver detalles:"
+  echo "  python3 secretscan_llm.py scan ."
+  exit 1
+fi
+echo "✅ Sin secretos nuevos tras LLM."
+exit 0

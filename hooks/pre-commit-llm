@@ -1,0 +1,17 @@
+#!/bin/sh
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[ -z "$REPO_ROOT" ] && exit 0
+echo "[pre-commit-llm] Escaneando con LLM..."
+python3 "$REPO_ROOT/secretscan_llm.py" scan "$REPO_ROOT" --rules "only_new=true,min=low"
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo ""
+  echo "❌ Commit bloqueado: secretos tras validación LLM."
+  echo "Sugerencias:"
+  echo "  - Corrige/retira el secreto del código."
+  echo "  - O auto-ignora lo benigno: python3 secretscan_llm.py scan . --auto-ignore-llm"
+  echo "  - O ignora por huella concreta: python3 secretscan.py ignore <fingerprint>"
+  exit 1
+fi
+echo "✅ Sin secretos nuevos tras LLM."
+exit 0

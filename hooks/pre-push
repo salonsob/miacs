@@ -1,0 +1,20 @@
+#!/bin/sh
+# Pre-push: bloquea el push si hay secretos sin ignorar
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -z "$REPO_ROOT" ]; then
+  exit 0
+fi
+
+echo "[pre-push] Escaneando secretos..."
+python3 "$REPO_ROOT/secretscan.py" scan "$REPO_ROOT"
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo ""
+  echo "❌ Push bloqueado: hay secretos no ignorados."
+  echo "Soluciones:"
+  echo "  - Corrige y retira el secreto del código"
+  echo "  - O marca como falso positivo: python3 secretscan.py ignore <fingerprint>"
+  exit 1
+fi
+echo "✅ Sin secretos nuevos. Continuando con el push."
+exit 0

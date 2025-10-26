@@ -1,0 +1,28 @@
+#!/bin/sh
+# Ejemplo de pre-receive (server-side). Instalar en el repositorio bare del servidor (hooks/pre-receive)
+# Requiere Python y secretscan.py disponible en el servidor o como submódulo.
+# Este ejemplo extrae temporalmente el tree del push e invoca el escáner.
+
+TMP_DIR=$(mktemp -d)
+cleanup() { rm -rf "$TMP_DIR"; }
+trap cleanup EXIT
+
+# Leer refs del push por stdin
+while read OLDREV NEWREV REFNAME; do
+  # Exportar el snapshot del push a TMP_DIR
+  git --work-tree="$TMP_DIR" checkout -f "$NEWREV" -- . >/dev/null 2>&1
+done
+
+# Ruta al escáner (ajusta si está en otra ubicación en el server)
+SCANNER="./secretscan.py"
+
+echo "[pre-receive] Escaneando secretos en el push..."
+python3 "$SCANNER" scan "$TMP_DIR"
+STATUS=$?
+if [ $STATUS -ne 0 ]; then
+  echo ""
+  echo "❌ Rechazado por secretos no ignorados."
+  exit 1
+fi
+echo "✅ Push aceptado."
+exit 0
