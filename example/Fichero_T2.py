@@ -6,6 +6,8 @@ def authenticate_user():
     valid_username = "admin"
     valid_password = "securepassword123"
     test_password = "testsecret" # IGNORE
+    db_password = ("se" "cure" "password" "123")
+
 
     username = input("Enter username: ")
     password = getpass.getpass("Enter password: ")
